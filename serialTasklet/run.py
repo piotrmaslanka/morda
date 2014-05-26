@@ -45,8 +45,7 @@ class SerialTasklet(BaseTasklet):
         tl;dr - I have read-lte to support reading from a particular electric power meter
         """
         self.angel.to_execute.put(msg)
-        
-        
+                
     def on_message_execed(self, msg, data):
         """
         Called by the Guardian Angel upon completing a request.
@@ -54,5 +53,4 @@ class SerialTasklet(BaseTasklet):
         the event is not scheduled via Event Execution Processor
         Too bad =)
         """
-        print("Replicating", data, "to message", msg.get())
         msg.reply(data)

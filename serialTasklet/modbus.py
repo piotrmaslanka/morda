@@ -6,47 +6,47 @@ class ModbusManager(object):
     def __init__(self):
         lst = []
         i = 0
-        while (i<256):
-            data = i<<1
+        while i < 256:
+            data = i << 1
             crc = 0
             j = 8
-            while (j>0):
+            while j > 0:
                 data >>= 1
-                if ((data^crc)&0x1):
+                if (data ^ crc) & 0x1:
                     crc = (crc>>1) ^ 0xA001
                 else:
                     crc >>= 1
                 j -= 1
-            lst.append (crc)
+            lst.append(crc)
             i += 1
         self.table = lst           
     def cCRC(self,st: bytes) -> bytes:
         crc = 0xFFFF
         for ch in st:
-            crc = (crc>>8)^self.table[(crc^ch)&0xFF]
+            crc = (crc >> 8) ^ self.table[(crc ^ ch) & 0xFF]
         return struct.pack('<H',crc)
     def getReadFlag(self, address: int, flag: int) -> bytes:
         flag = flag & 0xFFF8
         msg = struct.pack('>BBHH', address, 1, flag, 8)
         return msg + self.cCRC(msg)
-    def parseReadFlag(self, msg, flag):
+    def parseReadFlag(self, msg: bytes, flag: int):
         data = msg[3]
         bflag = flag & 0xFFF8
-        while (bflag != flag):
+        while bflag != flag:
             data = data >> 1
-            bflag = bflag+1
+            bflag += 1
         return data & 1
-    def getReadQuery(self, address, register, amount=1):
+    def getReadQuery(self, address: int, register: int, amount: int=1) -> bytes:
         msg = struct.pack('>BBHH', address, 3, register, amount)
         return msg + self.cCRC(msg)
-    def getWriteQuery(self, address, register, value):
+    def getWriteQuery(self, address: int, register: int, value: int) -> bytes:
         msg = struct.pack('>BBHH', address, 6, register, value)
         return msg + self.cCRC(msg)
-    def getWriteFlagQuery(self, address, flag, value):
+    def getWriteFlagQuery(self, address: int, flag: int, value: bool) -> bytes:
         msg = struct.pack('>BBHH', address, 5, flag, 0xFF00 if value else 0x0000)
         return msg + self.cCRC(msg)
         
-    def getReadInputLTEQuery(self, address, register):
+    def getReadInputLTEQuery(self, address: int, register: int) -> bytes:
         msg = struct.pack('>BBHH', address, 4, register, 2)
         return msg + self.cCRC(msg)        
     def parseReadRequest(self, msg, amount=1):
@@ -56,7 +56,8 @@ class ModbusManager(object):
         return lst
     def parseReadInputLTERequest(self, msg):
         return msg[3] * 256 + msg[4], msg[5] * 256 + msg[6]
-    def validate(self, msg):
+
+    def validate(self, msg: bytes) -> bool:
         crc = msg[-2:]
         precrc = msg[:-2]
         return self.cCRC(precrc) == crc
