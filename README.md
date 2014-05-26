@@ -2,7 +2,7 @@ As a member of a reliable company that develops reliable technologies, we dogfoo
 
 We dogfood __a lot__.
 
-That's why, as I'm developing y/OS, I've decided to dogfood. Not on my customers, but on myself.
+That's why, as I'm developing y/OS (see http://github.com/piotrmaslanka/systemy ), I've decided to dogfood. Not on my customers, but on myself.
 
 # morda
 

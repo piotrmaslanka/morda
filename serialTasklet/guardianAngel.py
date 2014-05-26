@@ -20,8 +20,9 @@ class GuardianAngel(Thread):
             yosMsg = self.to_execute.get()
             command, *the_rest = yosMsg.get()
             
+            # clear the serial buffers
             self.serial.setTimeout(0)
-            print("garead", self.serial.read(200))
+            self.serial.read(200)
             self.serial.setTimeout(1)
             
             result = {
