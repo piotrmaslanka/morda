@@ -3,27 +3,36 @@ from yos.ipc import Catalog
 from yos.time import Timer
 from yos.tasklets import Tasklet
 
+import datetime # time module would be useless - we don't want UTC time :)
+
 class TimesyncedTasklet(BaseTasklet):
     """
-    Tasklet whose job is to keep clock synchronized on our devices
+    Tasklet whose job is to keep clock synchronized on all PLC devices.
+    
+    It does it in two ways:
+        1) each hour a time signal is sent to attached devices
+        2) each minute it is checked whether time deviated more than 30 minutes.
+                if it does, then computer clock was changed and time signal is
+                sent to attached devices
     """
     
     def __init__(self):
         BaseTasklet.__init__(self)
         self.rs485_handler = None
         self.rs232_handler = None
+        
+        self.last_timestamp = datetime.datetime.now()       # Last timestamp
     
     def on_startup(self):
         # We need to acquire MODBUS command executors...
-
-        
         def rs232_catalog_handler(tid):
             if tid == Catalog.NotFoundError:
                 Catalog.get('rs232', rs232_catalog_handler, catname='serials')
             else:
                 def test(rs232_handler):
                     self.rs232_handler = rs232_handler
-                    self.post_init_232()
+                    if self.rs485_handler != None:
+                        self.post_init()
                 Tasklet.open(tid, test)
         
         def rs485_catalog_handler(tid):
@@ -32,23 +41,43 @@ class TimesyncedTasklet(BaseTasklet):
             else:
                 def test(rs485_handler):
                     self.rs485_handler = rs485_handler
-                    Timer.create(10, self.show_hour_onPulser)
+                    if self.rs232_handler != None:
+                        self.post_init()
                 Tasklet.open(tid, test)
                 
         Catalog.get('rs485', rs485_catalog_handler, catname='serials')
-        #Catalog.get('rs232', rs232_catalog_handler, catname='serials')
+        Catalog.get('rs232', rs232_catalog_handler, catname='serials')
         
+    def post_init(self):
+        """Called when both MODBUS executors were acquired"""
+        # Register sync watchers    
+        Timer.create(60, self.periodical_clock_sweep)
+        Timer.create(60*60, self.each_hour_sync)
+
+    def synchronize_time(self):
+        ZERO_LAMBDA = lambda ret: pass
+    
+        # Synchronize irrigation
+        self.rs485_handler.send_sync(('write-register', 28, 4001, datetime.datetime.now().minute), ZERO_LAMBDA)
+        self.rs485_handler.send_sync(('write-register', 28, 4002, datetime.datetime.now().hour), ZERO_LAMBDA)
+
+        # Synchronize heating
+        self.rs232_handler.send_sync(('write-register', 2, 4001, datetime.datetime.now().minute), ZERO_LAMBDA)
+        self.rs232_handler.send_sync(('write-register', 2, 4002, datetime.datetime.now().hour), ZERO_LAMBDA)
         
-    def post_init_232(self):
-        self.rs232_handler.send_sync(('read-registers', 2, 4001, 2), lambda response: print(response))        
+    def periodical_clock_sweep(self):
+        """Called each minute, checking clock deviation. If more than 30 minutes, then clock has 
+        been readjusted - sends time signal to target devices then"""
         
-    def show_hour_onPulser(self):
-        self.rs485_handler.send_sync(('read-registers', 28, 4001, 2), self.show_hour_onData)
+        if abs(self.last_timestamp - datetime.datetime.now()) > datetime.timedelta(0, 30*60):
+            # Clock deviated, correct it
+            print("timesynced: Unplanned clock deviation occurred")
+            self.synchronize_time()
+            
+        self.last_timestamp = datetime.datetime.now()
+        Timer.create(60, self.periodical_clock_sweep)
         
-    def show_hour_onData(self, time):
-        """Called by self when all channel handler were acquired"""
-        if time == None:
-            self.rs485_handler.send_sync(('read-registers', 28, 4001, 2), self.show_hour_onData)
-        else:
-            print("Irrigation PLC reports %s:%s" % (time[1], time[0]))
-            Timer.create(10, self.show_hour_onPulser)
+    def each_hour_sync(self):
+        """Called each hour, forcibly synchronizes time"""
+        self.synchronize_time()
+        Timer.create(60*60, self.each_hour_sync)
