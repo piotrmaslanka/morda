@@ -51,19 +51,21 @@ class TimesyncedTasklet(BaseTasklet):
     def post_init(self):
         """Called when both MODBUS executors were acquired"""
         # Register sync watchers    
-        Timer.create(60, self.periodical_clock_sweep)
-        Timer.create(60*60, self.each_hour_sync)
+        self.periodical_clock_sweep()
+        self.each_hour_sync()
 
     def synchronize_time(self):
         ZERO_LAMBDA = lambda ret: pass
+        HOUR = datetime.datetime.now().hour
+        MINUTE = datetime.datetime.now().minute
     
         # Synchronize irrigation
-        self.rs485_handler.send_sync(('write-register', 28, 4001, datetime.datetime.now().minute), ZERO_LAMBDA)
-        self.rs485_handler.send_sync(('write-register', 28, 4002, datetime.datetime.now().hour), ZERO_LAMBDA)
+        self.rs485_handler.send_sync(('write-register', 28, 4001, MINUTE), ZERO_LAMBDA)
+        self.rs485_handler.send_sync(('write-register', 28, 4002, HOUR), ZERO_LAMBDA)
 
         # Synchronize heating
-        self.rs232_handler.send_sync(('write-register', 2, 4001, datetime.datetime.now().minute), ZERO_LAMBDA)
-        self.rs232_handler.send_sync(('write-register', 2, 4002, datetime.datetime.now().hour), ZERO_LAMBDA)
+        self.rs232_handler.send_sync(('write-register', 2, 4001, MINUTE), ZERO_LAMBDA)
+        self.rs232_handler.send_sync(('write-register', 2, 4002, HOUR), ZERO_LAMBDA)
         
     def periodical_clock_sweep(self):
         """Called each minute, checking clock deviation. If more than 30 minutes, then clock has 
@@ -81,3 +83,4 @@ class TimesyncedTasklet(BaseTasklet):
         """Called each hour, forcibly synchronizes time"""
         self.synchronize_time()
         Timer.create(60*60, self.each_hour_sync)
+        print("timesynced: Planned time sync occurred")
