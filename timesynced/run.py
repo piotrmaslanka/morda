@@ -25,28 +25,24 @@ class TimesyncedTasklet(BaseTasklet):
     
     def on_startup(self):
         # We need to acquire MODBUS command executors...
-        def rs232_catalog_handler(tid):
-            if tid == Catalog.NotFoundError:
-                Catalog.get('rs232', rs232_catalog_handler, catname='serials')
-            else:
-                def test(rs232_handler):
-                    self.rs232_handler = rs232_handler
-                    if self.rs485_handler != None:
-                        self.post_init()
-                Tasklet.open(tid, test)
-        
-        def rs485_catalog_handler(tid):
-            if tid == Catalog.NotFoundError:
-                Catalog.get('rs485', rs485_catalog_handler, catname='serials')
-            else:
-                def test(rs485_handler):
-                    self.rs485_handler = rs485_handler
-                    if self.rs232_handler != None:
-                        self.post_init()
-                Tasklet.open(tid, test)
+        def rs_catalog_handler(cat):
+            if None in cat.values():
+                Catalog.gather(['rs485', 'rs232'], rs_catalog_handler, catname='serials')
+                return
                 
-        Catalog.get('rs485', rs485_catalog_handler, catname='serials')
-        Catalog.get('rs232', rs232_catalog_handler, catname='serials')
+            def test485(rs485_handler):
+                self.rs485_handler = rs485_handler
+                if self.rs232_handler != None:
+                    self.post_init()            
+            def test232(rs232_handler):
+                self.rs232_handler = rs232_handler
+                if self.rs485_handler != None:
+                    self.post_init()
+                    
+            Tasklet.open(cat['rs485'], test485)
+            Tasklet.open(cat['rs232'], test232)
+
+        Catalog.gather(['rs485', 'rs232'], rs_catalog_handler, catname='serials')
         
     def post_init(self):
         """Called when both MODBUS executors were acquired"""
