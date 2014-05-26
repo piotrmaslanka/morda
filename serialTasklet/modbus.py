@@ -49,7 +49,7 @@ class ModbusManager(object):
     def getReadInputLTEQuery(self, address: int, register: int) -> bytes:
         msg = struct.pack('>BBHH', address, 4, register, 2)
         return msg + self.cCRC(msg)        
-    def parseReadRequest(self, msg, amount=1):
+    def parseReadRequest(self, msg, amount):
         lst = []
         for x in range(0, amount):
             lst.append(msg[3+x*2] * 256 + msg[4+x*2])
@@ -79,18 +79,16 @@ class SerialCommunication(object):
         else:
             return None
         
-    def getReg(self, a, r, amount=1):
+    def getReg(self, a, r, amount):
         mmr = self.mm.getReadQuery(a, r, amount)
         self.serport.flushInput()
         self.serport.flushOutput()
-        print(mmr)
         self.serport.write(mmr)
         msg = self.serport.read(5+amount*2)
         if self.mm.validate(msg):
             msg = self.mm.parseReadRequest(msg, amount)
             return msg
         else:
-            print("Validation failed, received ",msg)
             return None
 
     def getLTEReg(self, a, r):

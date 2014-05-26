@@ -1,5 +1,6 @@
 from yos.rt import BaseTasklet
 from yos.ipc import Catalog
+from yos.time import Timer
 from yos.tasklets import Tasklet
 
 class TimesyncedTasklet(BaseTasklet):
@@ -31,7 +32,7 @@ class TimesyncedTasklet(BaseTasklet):
             else:
                 def test(rs485_handler):
                     self.rs485_handler = rs485_handler
-                    self.post_init_485()
+                    Timer.create(10, self.show_hour_onPulser)
                 Tasklet.open(tid, test)
                 
         Catalog.get('rs485', rs485_catalog_handler, catname='serials')
@@ -39,10 +40,15 @@ class TimesyncedTasklet(BaseTasklet):
         
         
     def post_init_232(self):
-        self.rs232_handler.send_sync(('read-registers', 2, 4002, 1), lambda response: print(response))        
+        self.rs232_handler.send_sync(('read-registers', 2, 4001, 2), lambda response: print(response))        
         
-    def post_init_485(self):
+    def show_hour_onPulser(self):
+        self.rs485_handler.send_sync(('read-registers', 28, 4001, 2), self.show_hour_onData)
+        
+    def show_hour_onData(self, time):
         """Called by self when all channel handler were acquired"""
-        print("Post init")
-        
-        self.rs485_handler.send_sync(('read-registers', 29, 4002, 1), lambda response: print(response))
+        if time == None:
+            self.rs485_handler.send_sync(('read-registers', 28, 4001, 2), self.show_hour_onData)
+        else:
+            print("Irrigation PLC reports %s:%s" % (time[1], time[0]))
+            Timer.create(10, self.show_hour_onPulser)
