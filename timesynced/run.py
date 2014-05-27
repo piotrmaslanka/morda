@@ -1,4 +1,4 @@
-from yos.rt import BaseTasklet
+from yos.rt import BaseTasklet, NCounter
 from yos.ipc import Catalog
 from yos.time import Timer
 from yos.tasklets import Tasklet
@@ -27,20 +27,14 @@ class TimesyncedTasklet(BaseTasklet):
         # We need to acquire MODBUS command executors...
         def rs_catalog_handler(cat):
             if None in cat.values():
+                # if this happens that means that at least one of the handlers
+                # hasn't started up yet - try again...
                 Catalog.gather(['rs485', 'rs232'], rs_catalog_handler, catname='serials')
                 return
-                
-            def test485(rs485_handler):
-                self.rs485_handler = rs485_handler
-                if self.rs232_handler != None:
-                    self.post_init()            
-            def test232(rs232_handler):
-                self.rs232_handler = rs232_handler
-                if self.rs485_handler != None:
-                    self.post_init()
-                    
-            Tasklet.open(cat['rs485'], test485)
-            Tasklet.open(cat['rs232'], test232)
+            
+            c = NCounter(2, self.post_init) # after both tasklets are open, self.post_init will be called
+            Tasklet.open(cat['rs485'], c(lambda v: setattr(self, 'rs485_handler', v)))
+            Tasklet.open(cat['rs232'], c(lambda v: setattr(self, 'rs232_handler', v)))
 
         Catalog.gather(['rs485', 'rs232'], rs_catalog_handler, catname='serials')
         
