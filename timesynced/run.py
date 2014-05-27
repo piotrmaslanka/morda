@@ -45,7 +45,7 @@ class TimesyncedTasklet(BaseTasklet):
         Timer.repeat(60*60, self.each_hour_sync)
 
     def synchronize_time(self):
-        ZERO_LAMBDA = lambda ret: pass
+        ZERO_LAMBDA = lambda ret: None
         HOUR = datetime.datetime.now().hour
         MINUTE = datetime.datetime.now().minute
     
