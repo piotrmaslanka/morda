@@ -41,8 +41,8 @@ class TimesyncedTasklet(BaseTasklet):
     def post_init(self):
         """Called when both MODBUS executors were acquired"""
         # Register sync watchers    
-        self.periodical_clock_sweep()
-        self.each_hour_sync()
+        Timer.repeat(60, self.periodical_clock_sweep)
+        Timer.repeat(60*60, self.each_hour_sync)
 
     def synchronize_time(self):
         ZERO_LAMBDA = lambda ret: pass
@@ -67,10 +67,8 @@ class TimesyncedTasklet(BaseTasklet):
             self.synchronize_time()
             
         self.last_timestamp = datetime.datetime.now()
-        Timer.create(60, self.periodical_clock_sweep)
         
     def each_hour_sync(self):
         """Called each hour, forcibly synchronizes time"""
         self.synchronize_time()
-        Timer.create(60*60, self.each_hour_sync)
         print("timesynced: Planned time sync occurred")
