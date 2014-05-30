@@ -5,6 +5,7 @@ from yzero import Zero, WriteAssistant
 from yos.time import Timer
 import struct, time
 from morda.settings import ZERO_CONNECT
+from morda.utils import tosgn
 
 class ElectricityReader(BaseTasklet):
     """
@@ -57,16 +58,16 @@ class ElectricityReader(BaseTasklet):
         def read_voltages(repl):
             if repl == None: return
             l1v, a, l2v, b, l3v = repl
-            Catalog.scatter({'pwr.phase1.voltage': l1v,
-                             'pwr.phase2.voltage': l2v,
-                             'pwr.phase3.voltage': l3v}, catname='values')
+            Catalog.scatter({'pwr.phase1.voltage': tosgn(l1v),
+                             'pwr.phase2.voltage': tosgn(l2v),
+                             'pwr.phase3.voltage': tosgn(l3v)}, catname='values')
 
         def read_powers(repl):
             if repl == None: return
             w1, a, w2, b, w3 = repl
-            Catalog.scatter({'pwr.phase1.power': w1,
-                             'pwr.phase2.power': w2,
-                             'pwr.phase3.power': w3}, catname='values')
+            Catalog.scatter({'pwr.phase1.power': tosgn(w1),
+                             'pwr.phase2.power': tosgn(w2),
+                             'pwr.phase3.power': tosgn(w3)}, catname='values')
             
         def read_kwh(repl):
             if repl == None: return
@@ -75,24 +76,24 @@ class ElectricityReader(BaseTasklet):
         def read_apparent_power(repl):
             if repl == None: return
             w1, a, w2, b, w3 = repl
-            Catalog.scatter({'pwr.phase1.apparent_power': w1,
-                             'pwr.phase2.apparent_power': w2,
-                             'pwr.phase3.apparent_power': w3}, catname='values')
+            Catalog.scatter({'pwr.phase1.apparent_power': tosgn(w1),
+                             'pwr.phase2.apparent_power': tosgn(w2),
+                             'pwr.phase3.apparent_power': tosgn(w3)}, catname='values')
   
         def read_reactive_power(repl):
             if repl == None: return
             w1, a, w2, b, w3 = repl
-            Catalog.scatter({'pwr.phase1.reactive_power': w1,
-                             'pwr.phase2.reactive_power': w2,
-                             'pwr.phase3.reactive_power': w3}, catname='values')            
+            Catalog.scatter({'pwr.phase1.reactive_power': tosgn(w1),
+                             'pwr.phase2.reactive_power': tosgn(w2),
+                             'pwr.phase3.reactive_power': tosgn(w3)}, catname='values')            
     
             
         def read_frequencies(repl):
             if repl == None: return
             h1, a, h2, b, h3 = repl
-            Catalog.scatter({'pwr.phase1.frequency': h1,
-                             'pwr.phase2.frequency': h2,
-                             'pwr.phase3.frequency': h3}, catname='values')            
+            Catalog.scatter({'pwr.phase1.frequency': tosgn(h1),
+                             'pwr.phase2.frequency': tosgn(h2),
+                             'pwr.phase3.frequency': tosgn(h3)}, catname='values')            
             
         nc = NCounter(6, self.refresh_data)
         
