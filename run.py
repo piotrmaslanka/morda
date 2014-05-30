@@ -6,7 +6,9 @@ class Initrd(GCTasklet):
         
         from morda.serialTasklet import SerialTasklet
         from morda.timesynced import TimesyncedTasklet
+        from morda.httpInterface import HTTPServerTasklet
         
-        Tasklet.start(SerialTasklet, '232handler', 'SerialHandler', None, None, 'COM1', 'rs232')
-        Tasklet.start(SerialTasklet, '485handler', 'SerialHandler', None, None, 'COM2', 'rs485')
-        Tasklet.start(TimesyncedTasklet, 'timesynced', 'Support', 'MORDA')
+        #Tasklet.start(SerialTasklet, '232handler', 'SerialHandler', None, None, 'COM1', 'rs232')
+        #Tasklet.start(SerialTasklet, '485handler', 'SerialHandler', None, None, 'COM2', 'rs485')
+        #Tasklet.start(TimesyncedTasklet, 'timesynced', 'Support', None)
+        Tasklet.start(HTTPServerTasklet, 'server', 'http', None)
