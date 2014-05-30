@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Prąd elektryczny</title>
+    <script type="text/javascript" src="/js/jquery.js"></script>
+    <script type="text/javascript" src="/js/jquery-scrollable.js"></script>
+    <script type="text/javascript" src="/js/debiki-utterscroll.js"></script>
+    <script type="text/javascript">
+        
+        function refresh_powers() {
+            $.post('http://localhost:81/', {'operation': 'get-electro'}, 
+                function(data) {
+                    for (var key in data) {
+                        $('#'+key.split('.').join('-')).html(data[key]);
+                    }
+                });
+        }
+        
+        setInterval(refresh_powers, 5000);
+        $(refresh_powers);
+    </script>
+</head>
+<body>
+    Faza 1: <span id="pwr-phase1-voltage"></span>V, <span id="pwr-phase1-power"></span>W<br>
+    Faza 2: <span id="pwr-phase2-voltage"></span>V, <span id="pwr-phase2-power"></span>W<br>
+    Faza 3: <span id="pwr-phase3-voltage"></span>V, <span id="pwr-phase3-power"></span>W<br>
+</body>
+</html>
+               <!--      
+                     
+                     og.gather(['pwr.phase1.voltage', 'pwr.phase2.voltage', 'pwr.phase3.voltage', 
+                        'pwr.phase1.power', 'pwr.phase2.power', 'pwr.phase3.power',
+                        'pwr.phase1.apparent_power', 'pwr.phase2.apparent_power',
+                        'pwr.phase3.apparent_power', 'pwr.phase1.reactive_power',
+                        'pwr.phase2.reactive_power', 'pwr.phase3.reactive_power',
+                        'pwr.phase1.frequency', 'pwr.phase2.frequency', 
+                        'pwr.phase3.frequency'], call_on_completion, catname='values')        
+    -->

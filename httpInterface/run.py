@@ -36,13 +36,17 @@ class HTTPConnection(GCTasklet):
         execute(sock, self.output_values, **jsonargs)
             
     def output_values(self, val):
-        if isinstance(val, Exception):
-            sock.write(b'HTTP/1.1 500 Internal server error\nAccess-Control-Allow-Origin: *\n\n')
-        else:
+        try:
             x = json.dumps(val)
-            sock.write(b'HTTP/1.1 200 OK\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\n\n')
-            sock.write(x.encode('utf8'))
+        except Exception as x:
+            val = x
         
+        if isinstance(val, Exception):
+            self.client_sock.write(b'HTTP/1.1 500 Internal server error\nAccess-Control-Allow-Origin: *\n\n')
+        else:
+            self.client_sock.write(b'HTTP/1.1 200 OK\nContent-Type: application/json\nAccess-Control-Allow-Origin: *\n\n')
+            self.client_sock.write(x.encode('utf8'))
+
         self.client_sock.close()
 
 class HTTPServerTasklet(BaseTasklet):
