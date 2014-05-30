@@ -1,22 +1,21 @@
 from yos.rt import BaseTasklet, NCounter
-
+from yos.tasklets import Tasklet
 from yzero import Zero, SeriesDefinition
 from morda.settings import ZERO_CONNECT
 
 class Install(BaseTasklet):
     
     def on_startup(self):
-        print("Installing")
         self.zero = Zero(ZERO_CONNECT)
     
-        def cool():
-            print ("Zero series defined")
+        def done():
+            Tasklet.me().terminate()
     
-        installs = NCounter(7, cool)
+        installs = NCounter(7, done)
     
         # define electricity
         
-        e_pc = SeriesDefinition('pwr.kwh_counter', 1, 1, 0, 8, '', 0)
+        e_pc = SeriesDefinition('pwr.wh_counter', 1, 1, 0, 8, '', 0)
         
         e_v1 = SeriesDefinition('pwr.phase1.voltage', 1, 1, 16070400, 4, 'slabsize=65536', 0)
         e_v2 = SeriesDefinition('pwr.phase2.voltage', 1, 1, 16070400, 4, 'slabsize=65536', 0)
