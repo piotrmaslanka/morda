@@ -25,11 +25,14 @@ class GuardianAngel(Thread):
             self.serial.read(200)
             self.serial.setTimeout(1)
             
-            result = {
-             'read-registers': self.sercom.getReg,
-             'write-register': self.sercom.setReg,
-             'read-flag': self.sercom.getFlag,
-             'read-lte': self.sercom.getLTEReg
-            }[command](*the_rest)
+            try:
+                result = {
+                'read-registers': self.sercom.getReg,
+                'write-register': self.sercom.setReg,
+                'read-flag': self.sercom.getFlag,
+                'read-lte': self.sercom.getLTEReg
+                }[command](*the_rest)
+            except:
+                result = None
                 
             self.tasklet.on_message_execed(yosMsg, result)
