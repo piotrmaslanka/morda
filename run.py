@@ -9,10 +9,21 @@ class Initrd(GCTasklet):
         from morda.httpInterface import HTTPServerTasklet
         from morda.power import ElectricityReader
         from morda.installation import Install
+        from morda.irrigation import IrrigationReader
         
-        #Tasklet.start(SerialTasklet, '232handler', 'SerialHandler', None, None, 'COM1', 'rs232')
-        Tasklet.start(SerialTasklet, '485handler', 'SerialHandler', None, None, 'COM2', 'rs485')
-        #Tasklet.start(TimesyncedTasklet, 'timesynced', 'Support', None)
+        # Serial port handlers
+        Tasklet.start(SerialTasklet, '232handler', 'serials', None, None, 'COM1', 'rs232')
+        Tasklet.start(SerialTasklet, '485handler', 'serials', None, None, 'COM2', 'rs485')
+        
+        # Time synchronizer
+        Tasklet.start(TimesyncedTasklet, 'timesynced', 'timesynced', None)
+        
+        # HTTP REST API server
         Tasklet.start(HTTPServerTasklet, 'server', 'http', None)
-        Tasklet.start(ElectricityReader, 'power', 'power', None)
+        
+        # Device readers
+        Tasklet.start(ElectricityReader, 'reader', 'power', None)        
+        Tasklet.start(IrrigationReader, 'reader', 'irrigation', None)
+        
+        # Configurator and environment sanitizer
         Tasklet.start(Install, 'install', 'install', None)
