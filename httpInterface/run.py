@@ -55,8 +55,8 @@ class HTTPServerTasklet(BaseTasklet):
     """
     
     def on_startup(self):
-        sock = NetworkSocket.server(NetworkSocket.SOCK_TCP, ('127.0.0.1', 81))
-        sock.register(self.on_new_connection, None, None, None, None)
+        NetworkSocket.server(NetworkSocket.SOCK_TCP, ('127.0.0.1', 81)) \
+            .register(self.on_new_connection, None, None, None, None)
         
     def on_new_connection(self, sock, clientsock):
         Tasklet.start(HTTPConnection, 'client', None, None, None, clientsock)

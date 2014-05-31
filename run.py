@@ -7,7 +7,7 @@ class Initrd(GCTasklet):
         from morda.serialTasklet import SerialTasklet
         from morda.timesynced import TimesyncedTasklet
         from morda.httpInterface import HTTPServerTasklet
-        from morda.readers import ElectricityReader, IrrigationReader
+        from morda.readers import ElectricityReader, IrrigationReader, HeatingReader
         from morda.installation import Install
         
         # Serial port handlers
@@ -23,6 +23,7 @@ class Initrd(GCTasklet):
         # Device readers
         Tasklet.start(ElectricityReader, 'reader', 'power', None)        
         Tasklet.start(IrrigationReader, 'reader', 'irrigation', None)
+        Tasklet.start(HeatingReader, 'reader', 'heating', None)
         
         # Configurator and environment sanitizer
         Tasklet.start(Install, 'install', 'install', None)
