@@ -26,7 +26,7 @@ class TimesyncedTasklet(BaseTasklet):
     def on_startup(self):
         # We need to acquire MODBUS command executors...
         def rs_catalog_handler(cat):
-            if None in cat.values():
+            if Catalog.NotFoundError in cat.values():
                 # if this happens that means that at least one of the handlers
                 # hasn't started up yet - try again...
                 Catalog.gather(['rs485', 'rs232'], rs_catalog_handler, catname='serials')
