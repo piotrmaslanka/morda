@@ -16,7 +16,7 @@ def execute(sock, call_on_completion: callable, **kwargs) -> object:
                         'pwr.phase3.apparent_power', 'pwr.phase1.reactive_power',
                         'pwr.phase2.reactive_power', 'pwr.phase3.reactive_power',
                         'pwr.phase1.frequency', 'pwr.phase2.frequency', 
-                        'pwr.phase3.frequency'], call_on_completion, catname='values')        
+                        'pwr.phase3.frequency', 'pwr.wh_counter'], call_on_completion, catname='values')        
     elif kwargs['operation'] == 'series-load':
         get_series(kwargs['series-name'], int(kwargs['from']), int(kwargs['to']), call_on_completion)        
     else:

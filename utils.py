@@ -4,7 +4,7 @@ def tosgn(v):
     """
     v = int(v)
     if v > 32767:
-        return 32768 - v
+        return -(v-32768)
     else:
         return v
     

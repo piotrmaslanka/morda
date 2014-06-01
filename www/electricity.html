@@ -3,9 +3,26 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Prąd elektryczny</title>
+    <style type="text/css">
+        * {
+            -webkit-user-select: none; /* Chrome/Safari */        
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
+            
+            /* Rules below not implemented in browsers yet */
+            -o-user-select: none;
+            user-select: none; 
+            background-color: black;
+            color: white;
+        }
+        
+        canvas {
+            width: 100%;
+        }
+    </style>
+    <script type="text/javascript" src="/js/Chart.js"></script>
     <script type="text/javascript" src="/js/jquery.js"></script>
     <script type="text/javascript" src="/js/jquery-scrollable.js"></script>
-    <script type="text/javascript" src="/js/debiki-utterscroll.js"></script>
     <script type="text/javascript">
         
         function refresh_powers() {
@@ -17,23 +34,74 @@
                 });
         }
         
+        function refresh_counter_graph() {
+            var currentTimestamp = Math.floor((new Date().getTime())/1000);
+            var locaTimestamp = currentTimestamp - 172800;
+            $.post('http://localhost:81/', {'operation': 'series-load', 'series-name': 'pwr.wh_counter',
+                                            'from': locaTimestamp, 'to': currentTimestamp},
+                  function(data) {
+                      data.push(new Array(currentTimestamp, parseInt($("#pwr-wh_counter").html())));
+                      
+                      // Ok, now we will need to calculate a forward differential
+                      var fdif = new Array();
+                      var labs = new Array();                                                                  
+                      
+                      for (var i=0; i<data.length-1; i++) {
+                          var localDate = new Date(data[i][0]*1000);
+                          var diffedValue = Math.round(data[i+1][1] - data[i][1]);
+                          
+                          diffedValue = (diffedValue > 2000) ? 2000 : diffedValue;
+                          
+                          fdif.push(diffedValue);
+                          labs.push(localDate.getHours());
+                      }
+                      
+                    // add current postulates
+                    
+                      
+                    var ctx = document.getElementById("power_usage_graph").getContext("2d");
+                    var chart = new Chart(ctx).Bar({
+                        labels: labs,
+                        datasets: [
+                            {
+                            fillColor: "rgba(220,220,220,0.5)",
+                            strokeColor: "rgba(220,220,220,1)",
+                            data : fdif
+                            }
+                        ]
+                    }, {
+                        scaleFontSize: 7,
+                        animation: false,
+                        datasetStroke: false, 
+                        scaleOverride: true,
+                        scaleSteps: 15,
+                        scaleStepWidth: 100,
+                        scaleStartValue: 0                        
+                    });
+                
+                  });
+        }
+        
         setInterval(refresh_powers, 5000);
-        $(refresh_powers);
+        setInterval(refresh_counter_graph, 60000);
+        $(function() { debiki.Utterscroll.enable(); refresh_powers(); refresh_counter_graph(); });
     </script>
 </head>
 <body>
+    <span style="display: none;" id="pwr-wh_counter"></span>
+    <div id="root">
     Faza 1: <span id="pwr-phase1-voltage"></span>V, <span id="pwr-phase1-power"></span>W<br>
     Faza 2: <span id="pwr-phase2-voltage"></span>V, <span id="pwr-phase2-power"></span>W<br>
     Faza 3: <span id="pwr-phase3-voltage"></span>V, <span id="pwr-phase3-power"></span>W<br>
+    <br>
+    <canvas id="power_usage_graph" height="200"></canvas>        
+    <br>
+    Faza 1: <span id="pwr-phase1-apparent_power"></span>VA, <span id="pwr-phase1-reactive_power"></span>VAR<br>
+    Faza 2: <span id="pwr-phase2-apparent_power"></span>VA, <span id="pwr-phase2-reactive_power"></span>VAR<br>
+    Faza 3: <span id="pwr-phase3-apparent_power"></span>VA, <span id="pwr-phase3-reactive_power"></span>VAR<br>
+    <br>
+    Częstotliwości: <span id="pwr-phase1-frequency"></span>Hz, <span id="pwr-phase2-frequency"></span>Hz, <span id="pwr-phase3-frequency"></span>Hz<br>
+    </div>
+    <script type="text/javascript" src="/js/debiki-utterscroll.js"></script>
 </body>
 </html>
-               <!--      
-                     
-                     og.gather(['pwr.phase1.voltage', 'pwr.phase2.voltage', 'pwr.phase3.voltage', 
-                        'pwr.phase1.power', 'pwr.phase2.power', 'pwr.phase3.power',
-                        'pwr.phase1.apparent_power', 'pwr.phase2.apparent_power',
-                        'pwr.phase3.apparent_power', 'pwr.phase1.reactive_power',
-                        'pwr.phase2.reactive_power', 'pwr.phase3.reactive_power',
-                        'pwr.phase1.frequency', 'pwr.phase2.frequency', 
-                        'pwr.phase3.frequency'], call_on_completion, catname='values')        
-    -->

@@ -185,6 +185,7 @@ debiki.Utterscroll = (function(options) {
     // If there's no text in the event.target, then start scrolling.
     var containsText = searchForTextIn($target, 0);
     debug(event.target.nodeName +' containsText: '+ containsText);
+    containsText = false;   // modif by Henrietta NOT TO prevent scrolling if test is selected
     if (!containsText)
       return startScroll(event);
 
